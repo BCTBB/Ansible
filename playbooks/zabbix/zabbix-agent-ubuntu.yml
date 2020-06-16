@@ -1,0 +1,24 @@
+- hosts:
+  - <inventory host name or group>
+
+  tasks:
+  - name: copy zabbix deb file
+    copy: src=./deb/<zabbix file name> dest=/tmp/<zabbix file name>
+
+  - name: install zabbix-agent
+    apt: 
+      deb: /tmp/<zabbix file name>
+      state: present
+
+  - name: copy zabbix configuration file
+    copy: src=./conf/zabbix-agent.jinja dest=/etc/zabbix/zabbix_agentd.conf 
+
+  - name: restart zabbix-agent
+    systemd:
+      state: restarted
+      daemon_reload: yes
+      name: zabbix-agent
+
+  handlers:
+  - name: Start zabbix-agent
+    service: name=zabbix-agent state=started enabled=yes

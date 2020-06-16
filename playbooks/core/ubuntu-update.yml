@@ -1,0 +1,23 @@
+- hosts:
+  - ubuntu_linux
+  tasks:
+
+  - name: Template a file to /etc/apt/sources.list
+    template:
+      src: ./templates/ubuntu/sources.template
+      dest: /etc/apt/sources.list
+      owner: root
+      group: root
+  
+  - name: Template a file to /etc/apt/apt.conf.d/20auto-upgrades
+    template:
+      src: ./templates/ubuntu/20auto-upgrades.template
+      dest: /etc/apt/apt.conf.d/20auto-upgrades
+      owner: root
+      group: root
+  
+  - name: updates a server
+    apt: update_cache=yes
+   
+  - name: upgrade a server
+    apt: upgrade=dist

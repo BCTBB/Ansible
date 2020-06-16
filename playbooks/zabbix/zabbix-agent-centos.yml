@@ -1,0 +1,21 @@
+- hosts:
+  - <inventory hostname or group>
+  remote_user: root
+
+  tasks:
+  - name: copy zabbix rpm file
+    copy: src=./rpm/<zabbix file name> dest=/tmp/<zabbix file name>
+
+  - name: run script if package installed
+    yum: 
+      name: /tmp/<zabbix file name>
+      state: present
+    
+  - name: copy zabbix configuration file
+    copy: src=./conf/zabbix-agent.jinja dest=/etc/zabbix/zabbix_agentd.conf 
+
+  - name: restart zabbix-agent
+    systemd:
+      state: restarted
+      daemon_reload: yes
+      name: zabbix-agent

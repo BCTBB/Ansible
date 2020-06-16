@@ -1,0 +1,68 @@
+- hosts:
+  - <inventory host group to target>
+  tasks:
+
+  - name: Install Packages
+    apt: name={{ item }} update_cache=yes cache_valid_time=3600 state=present
+    with_items:
+    - realmd
+    - sssd
+    - sssd-tools
+    - libnss-sss
+    - libpam-sss
+    - krb5-user
+    - adcli
+    - samba-common-bin
+    - packagekit
+    - python-setuptools
+    - python-pip
+
+  - name: Install Python Packages
+    pip: 
+      name: "{{ item }}"
+    with_items:
+    - pexpect
+
+  - name: Template a file to /etc/pam.d/common-session.conf
+    template:
+      src: ./templates/ubuntu/common-session.template
+      dest: /etc/pam.d/common-session
+      owner: root
+      group: root
+
+  - name: Template a file to /etc/sudoers
+    template:
+      src: ./templates/ubuntu/sudoers.template
+      dest: /etc/sudoers
+      owner: root
+      group: root
+
+  - name: Realm Leave
+    command: realm leave
+    ignore_errors: true
+
+  - name: Realm Join
+    expect:
+      command: realm join -U <username> <domain controller fqdn/ip>
+      responses:
+        Password for <username>: <password>
+    ignore_errors: true
+
+  - name: Realm permit
+    command: "{{ item }}"
+    with_items:
+    - realm permit --groups <AD Group Name to Permit>
+    ignore_errors: true
+
+  - name: Invalidate SSSD Cache
+    command: "{{ item }}"
+    with_items:
+    - systemctl stop sssd
+    - rm -rf /var/lib/sss/db/*
+    - systemctl start sssd
+    
+  - name: Reboot server  
+    command: reboot now
+    ignore_errors: true
+    notify:
+    - waiting for server to come back
